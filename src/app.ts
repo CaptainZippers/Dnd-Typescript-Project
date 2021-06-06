@@ -1,9 +1,5 @@
 // Autobind decorator
-function autoBind(
-    _target: any,
-    _methodName: string,
-    descriptor: PropertyDescriptor
-) {
+function autoBind(_target: any, _methodName: string, descriptor: PropertyDescriptor) {
     return <PropertyDescriptor>{
         configurable: true,
         get(): any {
@@ -27,33 +23,52 @@ function validate(validatableInput: Validatable) {
     if (validatableInput.required) {
         isValid = isValid && validatableInput.value.toString().trim().length !== 0;
     }
-    if (
-        validatableInput.minLength != null &&
-        typeof validatableInput.value === 'string'
-    ) {
+    if ( validatableInput.minLength != null && typeof validatableInput.value === 'string' ) {
         isValid = isValid && validatableInput.value.trim().length >= validatableInput.minLength;
     }
-    if (
-        validatableInput.maxLength != null &&
-        typeof validatableInput.value === 'string'
-    ) {
+    if ( validatableInput.maxLength != null && typeof validatableInput.value === 'string' ) {
         isValid = isValid && validatableInput.value.trim().length <= validatableInput.maxLength;
     }
-    if (
-        validatableInput.min != null &&
-        typeof validatableInput.value === 'number'
-    ) {
+    if ( validatableInput.min != null && typeof validatableInput.value === 'number' ) {
         isValid = isValid && validatableInput.value >= validatableInput.min;
     }
-    if (
-        validatableInput.max != null &&
-        typeof validatableInput.value === 'number'
-    ) {
+    if ( validatableInput.max != null && typeof validatableInput.value === 'number' ) {
         isValid = isValid && validatableInput.value <= validatableInput.max;
     }
     return isValid
 }
 
+// Project List Class
+
+class ProjectList {
+   templateElement: HTMLTemplateElement;
+   hostElement: HTMLDivElement;
+   element: HTMLElement;
+
+   constructor(private type: 'active' | 'finished') {
+        this.templateElement = <HTMLTemplateElement>document.getElementById('project-list')!;
+        this.hostElement = <HTMLDivElement>document.getElementById('app')!;
+        //import FormElement and render Form
+        const importedNode = document.importNode(this.templateElement.content, true);
+        this.element = <HTMLElement>importedNode.firstElementChild
+        this.element.id = `${this.type}-projects`;
+        // Render ProjectList
+        this.attach()
+        this.renderContent()
+   }
+
+   private renderContent() {
+       const listId = `${this.type}-projects-list`;
+       this.element.querySelector('ul')!.id = listId;
+       this.element.querySelector('h2')!.textContent = `${this.type.toUpperCase()} PROJECTS`
+   }
+
+   private attach() {
+       this.hostElement.insertAdjacentElement('beforeend', this.element);
+   }
+}
+
+// Project Form Class
 class ProjectInput {
     templateElement: HTMLTemplateElement;
     hostElement: HTMLDivElement;
@@ -98,12 +113,7 @@ class ProjectInput {
             min: 2
         }
 
-
-        if (
-            !validate(titleValidatable) ||
-            !validate(descriptionValidatable) ||
-            !validate(peopleValidatable)
-        ) {
+        if ( !validate(titleValidatable) || !validate(descriptionValidatable) || !validate(peopleValidatable)) {
             alert("Invalid Input, please try again");
             return;
         }
@@ -137,3 +147,5 @@ class ProjectInput {
 }
 
 const prjInput = new ProjectInput()
+const activeProjectList = new ProjectList('active')
+const finishedProjectList = new ProjectList('finished')

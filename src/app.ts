@@ -113,6 +113,9 @@ abstract class UIComponent<T extends HTMLElement, U extends HTMLElement> {
     private attach(attachPlacement: InsertPosition) {
         this.hostElement.insertAdjacentElement(attachPlacement, this.element);
     }
+
+    abstract configure(): void;
+    abstract renderContent(): void;
 }
 
 // Project Item Class
@@ -153,20 +156,36 @@ class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> implement
 
 // Project List Class
 
-class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> {
+class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> implements DragTarget {
     assignedProjects: Project[];
 
     constructor(private type: 'active' | 'finished') {
         super('project-list', 'app','beforeend', `${type}-projects`)
         this.assignedProjects = [];
-        projectState.addListener((projects: any[]) => {
-            this.assignedProjects = projects.filter(prj => {
-                return prj.status === (this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished)
-            });
-            this.renderProjects();
-        })
         // Render ProjectList
-        this.renderContent()
+        this.renderContent();
+        this.configure();
+    }
+
+    @autoBind
+    dragOverHandler(event: DragEvent) {
+        const listEl = this.element.querySelector('ul')!;
+        listEl.classList.add('droppable');
+        console.log(event)
+    }
+
+    @autoBind
+    dropHandler(event: DragEvent) {
+        const listEl = this.element.querySelector('ul')!;
+        listEl.classList.remove('droppable');
+        console.log(event)
+    }
+
+    @autoBind
+    dragLeaveHandler(event: DragEvent) {
+        const listEl = this.element.querySelector('ul')!;
+        listEl.classList.remove('droppable');
+        console.log(event)
     }
 
     private renderProjects() {
@@ -175,6 +194,19 @@ class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> {
         for (const projectItem of this.assignedProjects) {
             new ProjectItem(this.element.querySelector('ul')!.id, projectItem);
         }
+    }
+
+    configure() {
+        this.element.addEventListener('dragover', this.dragOverHandler);
+        this.element.addEventListener('dragleave', this.dragLeaveHandler);
+        this.element.addEventListener('drop', this.dropHandler);
+
+        projectState.addListener((projects: any[]) => {
+            this.assignedProjects = projects.filter(prj => {
+                return prj.status === (this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished)
+            });
+            this.renderProjects();
+        })
     }
 
     renderContent() {
@@ -243,8 +275,12 @@ class ProjectInput extends UIComponent<HTMLDivElement, HTMLElement> {
         }
     }
 
-    private configure() {
+    configure() {
         this.element.addEventListener('submit', this.submitHandler)
+    }
+
+    renderContent() {
+
     }
 }
 new ProjectInput()

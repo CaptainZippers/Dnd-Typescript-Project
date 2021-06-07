@@ -87,11 +87,22 @@ class ProjectState {
     addProject(title: string, description:string, numOfPeople: number) {
         const newProject = new Project(title, description, numOfPeople, ProjectStatus.Active);
         this.projects.push(newProject);
+        this.updateListeners();
+    }
+
+    moveProject(projectId: string, newStatus: ProjectStatus) {
+        const project = this.projects.find(prj => { return prj.id === projectId});
+        if (project && project.status !== newStatus) {
+            project.status = newStatus;
+            this.updateListeners();
+        }
+    }
+
+    private updateListeners() {
         for (const listenerFn of this.listeners) {
             listenerFn(this.projects.slice());
         }
     }
-
     addListener(listenerFn: Listener) {
         this.listeners.push(listenerFn);
     }
@@ -155,15 +166,17 @@ class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> implement
     }
 
     @autoBind
-    dragEndHandler(_: DragEvent) {
-        console.log('dragEnd')
-    }
+    dragEndHandler(_: DragEvent) { }
 }
 
 // Project List Class
 
 class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> implements DragTarget {
     assignedProjects: Project[];
+
+    get ProjectStatus() {
+        return (this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished)
+    }
 
     constructor(private type: 'active' | 'finished') {
         super('project-list', 'app','beforeend', `${type}-projects`)
@@ -182,7 +195,9 @@ class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> implements Dr
     }
 
     @autoBind
-    dropHandler(_: DragEvent) {
+    dropHandler(event: DragEvent) {
+        const projectId = event.dataTransfer!.getData('text/plain');
+        projectState.moveProject(projectId, ( this.ProjectStatus))
         this.element.querySelector('ul')!.classList.remove('droppable');
     }
 
@@ -206,7 +221,7 @@ class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> implements Dr
 
         projectState.addListener((projects: any[]) => {
             this.assignedProjects = projects.filter(prj => {
-                return prj.status === (this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished)
+                return prj.status === this.ProjectStatus;
             });
             this.renderProjects();
         })

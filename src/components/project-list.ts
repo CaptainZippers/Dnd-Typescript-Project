@@ -29,6 +29,7 @@ namespace App {
             const projectId = event.dataTransfer!.getData('text/plain');
             projectState.moveProject(projectId, ( this.ProjectStatus))
             this.element.querySelector('ul')!.classList.remove('droppable');
+            event.preventDefault();
         }
 
         @autoBind

@@ -105,6 +105,11 @@ abstract class UIComponent<T extends HTMLElement, U extends HTMLElement> {
 // Project Item Class
 
 class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> {
+
+    get participantText()  {
+        return `developer${(this.project.people === 1 ? '' : 's')}`;
+    }
+
     constructor(hostId: string, private project: Project) {
         super('single-project', hostId, 'beforeend', project.id);
 
@@ -113,7 +118,7 @@ class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> {
 
     renderContent() {
         this.element.querySelector('h2')!.textContent = this.project.title;
-        this.element.querySelector('h3')!.textContent = this.project.people.toString();
+        this.element.querySelector('h3')!.textContent = `${this.project.people.toString()} ${this.participantText} contributing`;
         this.element.querySelector('p')!.textContent = this.project.description;
     }
 }
@@ -183,7 +188,7 @@ class ProjectInput extends UIComponent<HTMLDivElement, HTMLElement> {
         const peopleValidatable: Validatable = {
             value: enteredPeople,
             required: true,
-            min: 2
+            max: 10,
         }
 
         if ( !validate(titleValidatable) || !validate(descriptionValidatable) || !validate(peopleValidatable)) {

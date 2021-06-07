@@ -88,9 +88,9 @@ abstract class UIComponent<T extends HTMLElement, U extends HTMLElement> {
     hostElement: T;
     element: U;
 
-    protected constructor(templateId: string, attachPlacement: InsertPosition, newElementId?: string) {
+    protected constructor(templateId: string, hostElementId: string, attachPlacement: InsertPosition, newElementId?: string) {
         this.templateElement = <HTMLTemplateElement>document.getElementById(templateId)!;
-        this.hostElement = <T>document.getElementById('app')!;
+        this.hostElement = <T>document.getElementById(hostElementId)!;
         const importedNode = document.importNode(this.templateElement.content, true);
         this.element = <U>importedNode.firstElementChild
         if (newElementId) { this.element.id = newElementId; }
@@ -102,13 +102,29 @@ abstract class UIComponent<T extends HTMLElement, U extends HTMLElement> {
     }
 }
 
+// Project Item Class
+
+class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> {
+    constructor(hostId: string, private project: Project) {
+        super('single-project', hostId, 'beforeend', project.id);
+
+        this.renderContent();
+    }
+
+    renderContent() {
+        this.element.querySelector('h2')!.textContent = this.project.title;
+        this.element.querySelector('h3')!.textContent = this.project.people.toString();
+        this.element.querySelector('p')!.textContent = this.project.description;
+    }
+}
+
 // Project List Class
 
 class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> {
     assignedProjects: Project[];
 
     constructor(private type: 'active' | 'finished') {
-        super('project-list','beforeend', `${type}-projects`)
+        super('project-list', 'app','beforeend', `${type}-projects`)
         this.assignedProjects = [];
         projectState.addListener((projects: any[]) => {
             this.assignedProjects = projects.filter(prj => {
@@ -124,9 +140,7 @@ class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> {
         const listEl = document.getElementById(`${this.type}-projects-list`) as HTMLUListElement;
         listEl.innerHTML = '';
         for (const projectItem of this.assignedProjects) {
-            const listItem = document.createElement('li') as HTMLLIElement;
-            listItem.textContent = projectItem.title;
-            listEl.appendChild(listItem);
+            new ProjectItem(this.element.querySelector('ul')!.id, projectItem);
         }
     }
 
@@ -143,7 +157,7 @@ class ProjectInput extends UIComponent<HTMLDivElement, HTMLElement> {
     peopleInputElement: HTMLInputElement;
 
     constructor() {
-        super('project-input', 'afterbegin', 'user-input');
+        super('project-input', 'app', 'afterbegin', 'user-input');
         // Grab elements from the form so we can interact with the separate inputs
         this.titleInputElement = <HTMLInputElement>this.element.querySelector('#title')!;
         this.descriptionInputElement = <HTMLInputElement>this.element.querySelector('#description')!;
@@ -191,7 +205,6 @@ class ProjectInput extends UIComponent<HTMLDivElement, HTMLElement> {
         const userInput = this.gatherUserInput();
         if (Array.isArray(userInput)) {
             const [title, description, people] = userInput
-            console.log(title, description, people)
             projectState.addProject(title, description, people);
             this.clearInputs();
         }
@@ -201,7 +214,6 @@ class ProjectInput extends UIComponent<HTMLDivElement, HTMLElement> {
         this.element.addEventListener('submit', this.submitHandler)
     }
 }
-
-const projectInput = new ProjectInput()
-const activeProjectList = new ProjectList('active')
-const finishedProjectList = new ProjectList('finished')
+new ProjectInput()
+new ProjectList('active')
+new ProjectList('finished')

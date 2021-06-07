@@ -38,9 +38,22 @@ function validate(validatableInput: Validatable) {
     return isValid
 }
 
-enum ProjectStatus {Active, Finished}
+//Drag & Drop Interfaces
+interface Draggable {
+    dragStartHandler(event: DragEvent): void;
+    dragEndHandler(event: DragEvent): void;
+}
+
+interface DragTarget {
+    dragOverHandler(event: DragEvent): void;
+    dropHandler(event: DragEvent): void;
+    dragLeaveHandler(event: DragEvent): void;
+}
 
 // Project Type
+
+enum ProjectStatus {Active, Finished}
+
 class Project {
     id: string;
     constructor(public title: string, public description: string, public people: number, public status: ProjectStatus) {
@@ -104,7 +117,7 @@ abstract class UIComponent<T extends HTMLElement, U extends HTMLElement> {
 
 // Project Item Class
 
-class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> {
+class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> implements Draggable {
 
     get participantText()  {
         return `developer${(this.project.people === 1 ? '' : 's')}`;
@@ -114,12 +127,27 @@ class ProjectItem extends UIComponent<HTMLUListElement, HTMLLIElement> {
         super('single-project', hostId, 'beforeend', project.id);
 
         this.renderContent();
+        this.configure();
+    }
+
+    configure() {
+        this.element.addEventListener('dragstart', this.dragStartHandler)
+        this.element.addEventListener('dragend', this.dragEndHandler)
     }
 
     renderContent() {
         this.element.querySelector('h2')!.textContent = this.project.title;
         this.element.querySelector('h3')!.textContent = `${this.project.people.toString()} ${this.participantText} contributing`;
         this.element.querySelector('p')!.textContent = this.project.description;
+    }
+    @autoBind
+    dragStartHandler(event: DragEvent) {
+        console.log(event)
+    }
+
+    @autoBind
+    dragEndHandler(_: DragEvent) {
+        console.log('dragEnd')
     }
 }
 

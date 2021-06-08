@@ -1,10 +1,10 @@
 // Project List Class
-import {UIComponent} from "./base-components.js";
-import {DragTarget} from "../models/drag-drop.js";
-import {Project, ProjectStatus} from "../models/project.js";
-import {ProjectItem} from "./project-item.js";
-import {autoBind} from "../decorators/autobind.js";
-import {projectState} from "../state/project.js";
+import {UIComponent} from "./base-components";
+import {DragTarget} from "../models/drag-drop";
+import {Project, ProjectStatus} from "../models/project";
+import {ProjectItem} from "./project-item";
+import {autoBind} from "../decorators/autobind";
+import {projectState} from "../state/project";
 
 export class ProjectList extends UIComponent<HTMLDivElement, HTMLElement> implements DragTarget {
     assignedProjects: Project[];
